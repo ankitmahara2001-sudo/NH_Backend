@@ -1,10 +1,29 @@
+import { DatabaseError, ForeignKeyConstraintError, UniqueConstraintError } from 'sequelize';
 import { ZodError } from 'zod';
 import { AppError } from '../lib/AppError.js';
 import { logger } from '../lib/logger.js';
 
 const HTTP_BAD_REQUEST = 400;
+const HTTP_CONFLICT = 409;
 const HTTP_PAYLOAD_TOO_LARGE = 413;
 const HTTP_INTERNAL_ERROR = 500;
+
+// Postgres codes: 23001 = restrict_violation (ON DELETE RESTRICT), 23503 = foreign_key_violation.
+const REFERENCE_ERROR_CODES = new Set(['23001', '23503']);
+const isReferenceError = (err) =>
+  err instanceof ForeignKeyConstraintError ||
+  (err instanceof DatabaseError && REFERENCE_ERROR_CODES.has(err.parent?.code));
+
+const snakeToCamel = (name) => name.replace(/_([a-z])/g, (_m, char) => char.toUpperCase());
+
+/** Field errors for a duplicate value, e.g. { slug: 'This value is already used.' }. */
+function uniqueFields(error) {
+  const fields = {};
+  for (const item of error.errors ?? []) {
+    if (item.path) fields[snakeToCamel(item.path)] = 'This value is already used. Choose another one.';
+  }
+  return fields;
+}
 
 function zodFields(error) {
   const fields = {};
@@ -32,6 +51,20 @@ export const errorHandler = (err, req, res, _next) => {
         code: 'VALIDATION_ERROR',
         message: 'Please check the highlighted fields.',
         fields: zodFields(err),
+      },
+    };
+  } else if (err instanceof UniqueConstraintError) {
+    status = HTTP_CONFLICT;
+    body = {
+      error: { code: 'DUPLICATE', message: 'This value is already used.', fields: uniqueFields(err) },
+    };
+  } else if (isReferenceError(err)) {
+    status = HTTP_CONFLICT;
+    body = {
+      error: {
+        code: 'IN_USE',
+        message:
+          'This item is linked to other records (for example bookings), so it cannot be removed. Deactivate it instead.',
       },
     };
   } else if (err?.type === 'entity.parse.failed') {

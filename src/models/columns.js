@@ -36,7 +36,10 @@ export const enumColumn = (values, allowNull = false) => ({
   allowNull,
 });
 
+// Filled by Sequelize on create/update and defaulted to NOW() by the migrations. Declared so
+// Model.init knows the attributes; not marked NOT NULL here because join-table inserts
+// (belongsToMany) are validated before Sequelize sets them.
 export const timestampColumns = {
-  createdAt: { type: DataTypes.DATE, allowNull: false },
-  updatedAt: { type: DataTypes.DATE, allowNull: false },
+  createdAt: { type: DataTypes.DATE },
+  updatedAt: { type: DataTypes.DATE },
 };
