@@ -1,0 +1,9 @@
+// sequelize-cli paths. Migrations and seeders are CommonJS (.cjs) because sequelize-cli loads them with require().
+const path = require('node:path');
+
+module.exports = {
+  config: path.resolve(__dirname, 'db', 'config.cjs'),
+  'migrations-path': path.resolve(__dirname, 'migrations'),
+  'seeders-path': path.resolve(__dirname, 'seeders'),
+  'models-path': path.resolve(__dirname, 'src', 'models'),
+};
