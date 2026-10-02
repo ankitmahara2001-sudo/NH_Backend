@@ -21,3 +21,10 @@ export async function requireCustomer(req, _res, next) {
   req.customer = customer;
   return next();
 }
+
+/** Sets req.customer when a valid session cookie is present; never rejects. */
+export async function loadOptionalCustomer(req, _res, next) {
+  const customerId = verifySessionToken('customer', req.cookies?.[CUSTOMER_COOKIE]);
+  req.customer = customerId ? await findCustomerById(customerId) : null;
+  return next();
+}

@@ -44,6 +44,11 @@ export function customerLogout(_req, res) {
   res.json({ data: { loggedOut: true } });
 }
 
+/** The logged-in customer or null (used by the website header; never 401). */
+export function customerSession(req, res) {
+  res.json({ data: req.customer ? serializeCustomer(req.customer) : null });
+}
+
 export function customerMe(req, res) {
   res.json({ data: serializeCustomer(req.customer) });
 }

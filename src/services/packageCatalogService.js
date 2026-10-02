@@ -176,17 +176,14 @@ async function findBlockedDates(packageId, { from, to } = {}) {
   });
 }
 
+const DETAIL_LISTS = ['prices', 'itineraryDays', 'inclusions', 'highlights', 'hotels', 'faqs', 'images'];
+
 /** GET /packages/:slug */
 export async function getPackageDetail(slug) {
   const pkg = await findActivePackageBySlug(slug, [
     { model: Destination, as: 'destination', attributes: ['id', 'name', 'slug', 'region', 'district'] },
-    'prices',
-    'itineraryDays',
-    'inclusions',
-    'highlights',
-    'hotels',
-    'faqs',
-    'images',
+    // Separate queries per list: joining eight one-to-many lists multiplies the rows (cartesian product).
+    ...DETAIL_LISTS.map((as) => ({ association: as, separate: true })),
   ]);
 
   const [departures, blockedDates, reviews, pricingSettings] = await Promise.all([

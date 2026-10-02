@@ -1,7 +1,7 @@
 import { customerProfileSchema, otpRequestSchema, otpVerifySchema } from '@nh/shared';
 import { Router } from 'express';
 import * as auth from '../../controllers/authController.js';
-import { requireCustomer } from '../../middlewares/auth.js';
+import { loadOptionalCustomer, requireCustomer } from '../../middlewares/auth.js';
 import { otpIpLimiter } from '../../middlewares/rateLimit.js';
 import { validate } from '../../middlewares/validate.js';
 
@@ -20,6 +20,7 @@ customerAuthRoutes.post(
   auth.customerVerifyOtp,
 );
 customerAuthRoutes.post('/auth/logout', auth.customerLogout);
+customerAuthRoutes.get('/auth/session', loadOptionalCustomer, auth.customerSession);
 
 customerAuthRoutes.get('/me', requireCustomer, auth.customerMe);
 customerAuthRoutes.patch(
