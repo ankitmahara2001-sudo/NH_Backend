@@ -1,4 +1,5 @@
 import { Sequelize } from 'sequelize';
+import ssl from '../../db/ssl.cjs';
 import { env, isTest } from '../config/env.js';
 import { logger } from './logger.js';
 
@@ -10,6 +11,7 @@ if (!databaseUrl) {
 // Same conventions as the migrations: snake_case columns, created_at / updated_at.
 export const sequelize = new Sequelize(databaseUrl, {
   dialect: 'postgres',
+  dialectOptions: ssl.sslDialectOptions(databaseUrl),
   logging: (sql) => logger.trace({ sql }, 'sql'),
   define: { underscored: true, timestamps: true },
   pool: { max: 10, min: 0, idle: 10_000 },

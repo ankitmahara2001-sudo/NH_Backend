@@ -1,5 +1,5 @@
 import globals from 'globals';
-import { javascriptBase } from '../eslint.base.mjs';
+import { javascriptBase } from './eslint.base.mjs';
 
 export default [
   ...javascriptBase,

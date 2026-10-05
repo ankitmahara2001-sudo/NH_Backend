@@ -97,7 +97,7 @@ function loadEnv() {
     const problems = result.error.issues.map((issue) => `  - ${issue.path.join('.')}: ${issue.message}`);
     console.error(
       `Invalid environment configuration (api/.env):\n${problems.join('\n')}\n` +
-        'See docs/env/api.env.example for every variable.',
+        'See .env.example for every variable.',
     );
     process.exit(1);
   }
