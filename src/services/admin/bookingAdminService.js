@@ -4,7 +4,7 @@ import { paginationMeta, toLimitOffset } from '../../lib/pagination.js';
 import { Booking, BookingTraveller, Customer, Package, Payment } from '../../models/index.js';
 
 /** Sequelize `where` for the admin booking filters (also used by the CSV export). */
-export function bookingFilters({ status, paymentStatus, packageId, from, to, search }) {
+function bookingFilters({ status, paymentStatus, packageId, from, to, search }) {
   const where = {};
   if (status) where.status = status;
   if (paymentStatus) where.paymentStatus = paymentStatus;

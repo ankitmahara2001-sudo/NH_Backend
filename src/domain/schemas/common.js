@@ -45,12 +45,6 @@ export const phoneSchema = z
 
 export const urlSchema = z.url('Enter a valid URL.').max(2048);
 
-/** An uploaded image as returned by Cloudinary and saved through the API. */
-export const imageSchema = z.object({
-  url: urlSchema,
-  publicId: optionalText(255),
-});
-
 export const paginationQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),

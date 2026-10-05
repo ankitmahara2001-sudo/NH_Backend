@@ -1,5 +1,5 @@
 import { DataTypes, Model } from 'sequelize';
-import { PRICE_TYPES } from '@nh/shared';
+import { PRICE_TYPES } from '../domain/enums.js';
 import { sequelize } from '../lib/db.js';
 import {
   enumColumn,

@@ -1,4 +1,4 @@
-import { pricingQuoteSchema } from '@nh/shared';
+import { pricingQuoteSchema } from '../../domain/schemas/booking.js';
 import { Router } from 'express';
 import { quote } from '../../controllers/pricingController.js';
 import { loadOptionalCustomer } from '../../middlewares/auth.js';

@@ -1,10 +1,5 @@
-import {
-  DEFAULT_BOOKING_PERCENT,
-  DEFAULT_GST_PERCENT,
-  PUBLIC_SETTING_KEYS,
-  SETTING_KEYS,
-  settingSchemas,
-} from '@nh/shared';
+import { DEFAULT_BOOKING_PERCENT, DEFAULT_GST_PERCENT } from '../domain/constants.js';
+import { PUBLIC_SETTING_KEYS, SETTING_KEYS, settingSchemas } from '../domain/schemas/settings.js';
 import { Op } from 'sequelize';
 import { AppError } from '../lib/AppError.js';
 import { sanitizeRichText } from '../lib/sanitizeHtml.js';
@@ -14,11 +9,6 @@ import { SiteSetting } from '../models/index.js';
 export async function getSettings(keys = SETTING_KEYS, options = {}) {
   const rows = await SiteSetting.findAll({ where: { key: { [Op.in]: keys } }, ...options });
   return Object.fromEntries(rows.map((row) => [row.key, row.value]));
-}
-
-export async function getSetting(key, options = {}) {
-  const row = await SiteSetting.findOne({ where: { key }, ...options });
-  return row ? row.value : null;
 }
 
 /** Every setting the public website may read (none of them hold secrets). */

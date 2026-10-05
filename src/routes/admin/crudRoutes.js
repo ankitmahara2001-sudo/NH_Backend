@@ -1,4 +1,5 @@
-import { idParamSchema, reorderSchema } from '@nh/shared';
+import { idParamSchema } from '../../domain/schemas/common.js';
+import { reorderSchema } from '../../domain/schemas/packages.js';
 import { Router } from 'express';
 import { validate } from '../../middlewares/validate.js';
 

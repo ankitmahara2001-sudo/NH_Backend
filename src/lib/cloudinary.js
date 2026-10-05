@@ -7,8 +7,8 @@ import { logger } from './logger.js';
 // The API secret never leaves the server.
 
 const API_BASE = 'https://api.cloudinary.com/v1_1';
-export const ALLOWED_FORMATS = ['jpg', 'jpeg', 'png', 'webp'];
-export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+const ALLOWED_FORMATS = ['jpg', 'jpeg', 'png', 'webp'];
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
 export function isCloudinaryConfigured() {
   return Boolean(env.CLOUDINARY_CLOUD_NAME && env.CLOUDINARY_API_KEY && env.CLOUDINARY_API_SECRET);

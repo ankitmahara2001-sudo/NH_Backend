@@ -1,4 +1,4 @@
-import { customerProfileSchema, otpRequestSchema, otpVerifySchema } from '@nh/shared';
+import { customerProfileSchema, otpRequestSchema, otpVerifySchema } from '../../domain/schemas/auth.js';
 import { Router } from 'express';
 import * as auth from '../../controllers/authController.js';
 import { loadOptionalCustomer, requireCustomer } from '../../middlewares/auth.js';

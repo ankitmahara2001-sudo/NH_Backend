@@ -1,5 +1,5 @@
 import { DataTypes, Model } from 'sequelize';
-import { BLOG_CATEGORIES, BLOG_STATUSES } from '@nh/shared';
+import { BLOG_CATEGORIES, BLOG_STATUSES } from '../domain/enums.js';
 import { sequelize } from '../lib/db.js';
 import { enumColumn, flagColumn, foreignKeyColumn, idColumn, timestampColumns } from './columns.js';
 

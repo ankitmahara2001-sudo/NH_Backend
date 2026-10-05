@@ -13,16 +13,6 @@ export function formatRupees(paise) {
   return `₹${formatter.format(amount)}`;
 }
 
-/** Rupees (from a form field) -> integer paise. */
-export function rupeesToPaise(rupees) {
-  return Math.round(Number(rupees) * PAISE_PER_RUPEE);
-}
-
-/** Paise -> rupees as a number (for form fields). */
-export function paiseToRupees(paise) {
-  return Number(paise ?? 0) / PAISE_PER_RUPEE;
-}
-
 const DATE_FORMAT = new Intl.DateTimeFormat('en-IN', {
   day: 'numeric',
   month: 'short',
@@ -31,7 +21,7 @@ const DATE_FORMAT = new Intl.DateTimeFormat('en-IN', {
 });
 
 /** "2026-10-18" or a Date -> "18 Oct 2026". Plain YYYY-MM-DD dates are read as calendar dates. */
-export function formatDate(value) {
+function formatDate(value) {
   if (!value) return '';
   const date =
     typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
@@ -50,20 +40,6 @@ export function formatDateRange(start, end) {
   if (fromYear === toYear && fromMonth === toMonth) return `${fromDay} – ${toDay} ${toMonth} ${toYear}`;
   if (fromYear === toYear) return `${fromDay} ${fromMonth} – ${toDay} ${toMonth} ${toYear}`;
   return `${from} – ${to}`;
-}
-
-/** "5 days · 4 nights" */
-export function formatDuration(days, nights) {
-  const d = `${days} day${days === 1 ? '' : 's'}`;
-  const n = `${nights} night${nights === 1 ? '' : 's'}`;
-  return `${d} · ${n}`;
-}
-
-/** Unit text under a price: "per person", "per couple", or the group label ("per family of 4"). */
-export function priceUnitLabel(priceType, label) {
-  if (priceType === 'per_person') return 'per person';
-  if (priceType === 'per_couple') return 'per couple';
-  return `per ${String(label || 'group').toLowerCase()}`;
 }
 
 /** Whole-number percentage saved, or 0 when there is no discount. */

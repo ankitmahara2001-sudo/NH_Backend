@@ -1,5 +1,5 @@
 // Every site_settings key, with the texts used in the design files.
-// Shapes match `settingSchemas` in shared/src/schemas/settings.ts.
+// Shapes match `settingSchemas` in src/domain/schemas/settings.js.
 
 const { placeholderImage, PLACEHOLDER_PORTRAIT } = require('./helpers.cjs');
 

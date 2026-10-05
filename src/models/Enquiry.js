@@ -1,5 +1,5 @@
 import { DataTypes, Model } from 'sequelize';
-import { ENQUIRY_STATUSES } from '@nh/shared';
+import { ENQUIRY_STATUSES } from '../domain/enums.js';
 import { sequelize } from '../lib/db.js';
 import { enumColumn, idColumn, timestampColumns } from './columns.js';
 

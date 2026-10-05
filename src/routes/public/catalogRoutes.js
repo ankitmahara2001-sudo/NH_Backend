@@ -1,10 +1,6 @@
-import {
-  blogQuerySchema,
-  enquiryCreateSchema,
-  galleryQuerySchema,
-  packageListQuerySchema,
-  slugSchema,
-} from '@nh/shared';
+import { blogQuerySchema, enquiryCreateSchema, galleryQuerySchema } from '../../domain/schemas/content.js';
+import { packageListQuerySchema } from '../../domain/schemas/packages.js';
+import { slugSchema } from '../../domain/schemas/common.js';
 import { Router } from 'express';
 import { z } from 'zod';
 import * as catalog from '../../controllers/catalogController.js';

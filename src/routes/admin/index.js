@@ -1,22 +1,18 @@
+import { ENQUIRY_STATUSES, SITE_SETTING_KEYS } from '../../domain/enums.js';
+import { adminBookingListQuerySchema } from '../../domain/schemas/booking.js';
+import { adminChangePasswordSchema, adminLoginSchema } from '../../domain/schemas/auth.js';
 import {
-  ENQUIRY_STATUSES,
-  SITE_SETTING_KEYS,
-  adminBookingListQuerySchema,
-  adminChangePasswordSchema,
-  adminLoginSchema,
   blogPostSchema,
   couponSchema,
-  destinationSchema,
   enquiryStatusSchema,
   galleryBulkCreateSchema,
   galleryImageSchema,
   heroSlideSchema,
-  idParamSchema,
-  paginationQuerySchema,
-  reviewSchema,
   uploadDeleteSchema,
   uploadSignatureSchema,
-} from '@nh/shared';
+} from '../../domain/schemas/content.js';
+import { destinationSchema, reviewSchema } from '../../domain/schemas/packages.js';
+import { idParamSchema, paginationQuerySchema } from '../../domain/schemas/common.js';
 import { Router } from 'express';
 import { z } from 'zod';
 import * as admin from '../../controllers/adminController.js';

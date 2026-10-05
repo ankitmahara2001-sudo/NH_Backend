@@ -63,11 +63,10 @@ variables as `.env.example`). On the server itself the host's environment variab
   the website and API share the login cookie.
 - Razorpay webhook: `https://<api-domain>/api/webhooks/razorpay` with `RAZORPAY_WEBHOOK_SECRET`.
 
-## Shared code
+## Domain code
 
-`shared/` (enums, zod schemas, formatting) is a copy of the master `shared/` in the project hub, installed as
-`@nh/shared`. Do not edit it here: edit the master, run `node scripts/sync-shared.mjs` in the hub, then
-commit the updated copy in each app.
+`src/domain/` holds the enums, zod schemas for every request and the formatting helpers. The API is the source
+of truth for validation: the website and admin panel have their own copies of the rules they need.
 
 ## Notes
 

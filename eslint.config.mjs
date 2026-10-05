@@ -1,9 +1,18 @@
+import js from '@eslint/js';
 import globals from 'globals';
-import { javascriptBase } from './eslint.base.mjs';
 
 export default [
-  ...javascriptBase,
-  { files: ['**/*.js', '**/*.mjs'], languageOptions: { globals: globals.node } },
+  { ignores: ['**/node_modules/**', '**/coverage/**'] },
+  js.configs.recommended,
+  {
+    languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.node },
+    rules: {
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      eqeqeq: ['error', 'always', { null: 'ignore' }],
+      'prefer-const': 'error',
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrors: 'none' }],
+    },
+  },
   {
     // sequelize-cli loads these with require(), so they are CommonJS.
     files: ['**/*.cjs', '.sequelizerc'],

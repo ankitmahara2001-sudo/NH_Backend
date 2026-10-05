@@ -80,7 +80,7 @@ export const reorderSchema = z.object({
 
 // ---- Pricing tab -----------------------------------------------------------
 
-export const packagePriceSchema = z
+const packagePriceSchema = z
   .object({
     id: z.int().positive().optional(),
     label: requiredText(120),
@@ -110,7 +110,7 @@ export const packagePricesSchema = z
 
 // ---- Dates tab -------------------------------------------------------------
 
-export const departureSchema = z.object({
+const departureSchema = z.object({
   id: z.int().positive().optional(),
   startDate: isoDateSchema,
   totalSeats: z.int().min(1).nullish(),
@@ -123,7 +123,7 @@ export const departuresSchema = z
     path: ['departures'],
   });
 
-export const blockedDateSchema = z
+const blockedDateSchema = z
   .object({
     id: z.int().positive().optional(),
     startDate: isoDateSchema,
@@ -138,7 +138,7 @@ export const blockedDatesSchema = z.object({ blockedDates: z.array(blockedDateSc
 
 // ---- Content tabs ----------------------------------------------------------
 
-export const itineraryDaySchema = z.object({
+const itineraryDaySchema = z.object({
   dayNumber: z.int().min(1),
   title: requiredText(160),
   description: requiredText(4000),
@@ -152,21 +152,21 @@ export const itinerarySchema = z
     path: ['days'],
   });
 
-export const inclusionSchema = z.object({
+const inclusionSchema = z.object({
   type: z.enum(INCLUSION_TYPES),
   text: requiredText(255),
   sortOrder: sortOrderSchema,
 });
 export const inclusionsSchema = z.object({ items: z.array(inclusionSchema) });
 
-export const highlightSchema = z.object({
+const highlightSchema = z.object({
   title: requiredText(120),
   text: requiredText(255),
   sortOrder: sortOrderSchema,
 });
 export const highlightsSchema = z.object({ items: z.array(highlightSchema) });
 
-export const hotelSchema = z.object({
+const hotelSchema = z.object({
   name: requiredText(160),
   rating: z.number().min(0).max(MAX_REVIEW_RATING).nullish(),
   roomType: optionalText(120),
@@ -178,14 +178,14 @@ export const hotelSchema = z.object({
 });
 export const hotelsSchema = z.object({ items: z.array(hotelSchema) });
 
-export const faqSchema = z.object({
+const faqSchema = z.object({
   question: requiredText(255),
   answer: requiredText(2000),
   sortOrder: sortOrderSchema,
 });
 export const faqsSchema = z.object({ items: z.array(faqSchema) });
 
-export const packageImageSchema = z.object({
+const packageImageSchema = z.object({
   url: urlSchema,
   publicId: optionalText(),
   altText: optionalText(255),
@@ -196,9 +196,9 @@ export const packageImagesCreateSchema = z.object({ images: z.array(packageImage
 
 // ---- Public listing filters --------------------------------------------------
 
-export const PACKAGE_SORTS = ['recommended', 'price_asc', 'price_desc', 'duration'];
+const PACKAGE_SORTS = ['recommended', 'price_asc', 'price_desc', 'duration'];
 
-export const DURATION_BUCKETS = ['short', 'medium', 'long'];
+const DURATION_BUCKETS = ['short', 'medium', 'long'];
 
 export const packageListQuerySchema = z.object({
   destination: z.string().trim().optional(),

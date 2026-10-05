@@ -85,12 +85,12 @@ export async function listGallery({ category, limit } = {}) {
   return rows.map(serializeGalleryImage);
 }
 
-export async function listHeroSlides() {
+async function listHeroSlides() {
   const rows = await HeroSlide.findAll({ where: { isActive: true }, order: BY_SORT_ORDER });
   return rows.map(serializeHeroSlide);
 }
 
-export async function listTestimonials({ limit } = {}) {
+async function listTestimonials({ limit } = {}) {
   const rows = await Review.findAll({ where: { isPublished: true }, order: BY_SORT_ORDER, limit });
   return rows.map(serializeReview);
 }

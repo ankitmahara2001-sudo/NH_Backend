@@ -1,6 +1,6 @@
 import { randomInt } from 'node:crypto';
 import bcrypt from 'bcryptjs';
-import { OTP_LENGTH } from '@nh/shared';
+import { OTP_LENGTH } from '../domain/constants.js';
 import { Op } from 'sequelize';
 import { AppError } from '../lib/AppError.js';
 import { sequelize } from '../lib/db.js';
@@ -9,7 +9,7 @@ import { sendOtpEmail } from './emailService.js';
 
 // Email + 6-digit code login (CLAUDE.md section 2, "Customer accounts and login").
 
-export const OTP_RULES = {
+const OTP_RULES = {
   validMinutes: 10,
   maxAttempts: 5,
   resendCooldownSeconds: 60,

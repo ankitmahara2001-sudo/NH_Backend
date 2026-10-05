@@ -2,7 +2,7 @@ import { DataTypes, Model } from 'sequelize';
 import { sequelize } from '../lib/db.js';
 import { idColumn, timestampColumns } from './columns.js';
 
-/** Key -> JSON value. Each key's shape is defined by `settingSchemas` in @nh/shared. */
+/** Key -> JSON value. Each key's shape is defined by `settingSchemas` in src/domain/schemas/settings.js. */
 export class SiteSetting extends Model {}
 
 SiteSetting.init(

@@ -1,5 +1,5 @@
 import { DataTypes, Model } from 'sequelize';
-import { GENDERS } from '@nh/shared';
+import { GENDERS } from '../domain/enums.js';
 import { sequelize } from '../lib/db.js';
 import { enumColumn, flagColumn, foreignKeyColumn, idColumn, timestampColumns } from './columns.js';
 

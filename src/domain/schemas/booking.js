@@ -9,7 +9,7 @@ const counter = (min) => z.int().min(min).max(MAX_TRAVELLER_COUNT);
  * Traveller counts. For per_person prices use adults/children; for per_couple and
  * per_group prices use units. Infants always travel free.
  */
-export const travellerCountsSchema = z.object({
+const travellerCountsSchema = z.object({
   adults: counter(0).default(0),
   children: counter(0).default(0),
   infants: counter(0).default(0),
@@ -33,7 +33,7 @@ const tripChoiceShape = {
 
 export const pricingQuoteSchema = z.object(tripChoiceShape);
 
-export const travellerSchema = z.object({
+const travellerSchema = z.object({
   fullName: requiredText(120),
   age: z.int().min(0).max(120),
   gender: z.enum(GENDERS),

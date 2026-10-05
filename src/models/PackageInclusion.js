@@ -1,5 +1,5 @@
 import { DataTypes, Model } from 'sequelize';
-import { INCLUSION_TYPES } from '@nh/shared';
+import { INCLUSION_TYPES } from '../domain/enums.js';
 import { sequelize } from '../lib/db.js';
 import { enumColumn, foreignKeyColumn, idColumn, sortOrderColumn, timestampColumns } from './columns.js';
 

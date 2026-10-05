@@ -1,5 +1,5 @@
 import { DataTypes, Model } from 'sequelize';
-import { GALLERY_CATEGORIES } from '@nh/shared';
+import { GALLERY_CATEGORIES } from '../domain/enums.js';
 import { sequelize } from '../lib/db.js';
 import { enumColumn, flagColumn, idColumn, sortOrderColumn, timestampColumns } from './columns.js';
 

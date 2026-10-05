@@ -1,4 +1,4 @@
-import { formatDateRange, formatRupees } from '@nh/shared';
+import { formatDateRange, formatRupees } from '../domain/format.js';
 import { button, detailsTable, detailsText, escapeHtml, paragraph, renderLayout } from './layout.js';
 
 // One function per email. Each returns { subject, html, text }.

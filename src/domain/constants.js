@@ -1,4 +1,4 @@
-// Business limits shared by the API (validation) and the front ends (UI hints).
+// Business limits enforced by the API.
 
 export const PAISE_PER_RUPEE = 100;
 

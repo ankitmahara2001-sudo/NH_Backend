@@ -1,5 +1,6 @@
 import { DataTypes, Model } from 'sequelize';
-import { AVAILABILITY_TYPES, DEFAULT_MIN_DAYS_BEFORE_BOOKING, TRIP_TYPES } from '@nh/shared';
+import { AVAILABILITY_TYPES, TRIP_TYPES } from '../domain/enums.js';
+import { DEFAULT_MIN_DAYS_BEFORE_BOOKING } from '../domain/constants.js';
 import { sequelize } from '../lib/db.js';
 import {
   enumColumn,

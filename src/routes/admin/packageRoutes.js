@@ -1,22 +1,19 @@
+import { AVAILABILITY_TYPES, TRIP_TYPES } from '../../domain/enums.js';
 import {
-  AVAILABILITY_TYPES,
-  TRIP_TYPES,
   blockedDatesSchema,
   departuresSchema,
   faqsSchema,
   highlightsSchema,
   hotelsSchema,
-  idParamSchema,
-  idSchema,
   inclusionsSchema,
   itinerarySchema,
-  optionalText,
   packageDetailsSchema,
   packageFlagsSchema,
   packageImagesCreateSchema,
   packagePricesSchema,
   reorderSchema,
-} from '@nh/shared';
+} from '../../domain/schemas/packages.js';
+import { idParamSchema, idSchema, optionalText } from '../../domain/schemas/common.js';
 import { Router } from 'express';
 import { z } from 'zod';
 import * as controller from '../../controllers/adminPackageController.js';

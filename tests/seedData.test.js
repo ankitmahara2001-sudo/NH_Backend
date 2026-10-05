@@ -1,6 +1,8 @@
 import { createRequire } from 'node:module';
 import { describe, expect, it } from 'vitest';
-import { couponSchema, packagePricesSchema, settingSchemas } from '@nh/shared';
+import { couponSchema } from '../src/domain/schemas/content.js';
+import { packagePricesSchema } from '../src/domain/schemas/packages.js';
+import { settingSchemas } from '../src/domain/schemas/settings.js';
 
 // Seed data must always satisfy the same schemas the admin panel and API use.
 const require = createRequire(import.meta.url);

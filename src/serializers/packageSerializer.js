@@ -1,4 +1,4 @@
-import { savingPercent } from '@nh/shared';
+import { savingPercent } from '../domain/format.js';
 import { addDays } from '../lib/dates.js';
 
 // Shapes package data for the public API. Money stays in paise; the website formats it.
@@ -9,7 +9,7 @@ function toNumberOrNull(value) {
   return value == null ? null : Number(value);
 }
 
-export function serializePrice(price) {
+function serializePrice(price) {
   const sellingPrice = price.discountedPrice ?? price.originalPrice;
   return {
     id: price.id,
@@ -33,7 +33,7 @@ export function pickDisplayPrice(prices = []) {
   return sorted[0] ? serializePrice(sorted[0]) : null;
 }
 
-export function serializeDestinationSummary(destination) {
+function serializeDestinationSummary(destination) {
   if (!destination) return null;
   return {
     id: destination.id,

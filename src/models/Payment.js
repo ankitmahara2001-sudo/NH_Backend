@@ -1,5 +1,5 @@
 import { DataTypes, Model } from 'sequelize';
-import { PAYMENT_METHODS, PAYMENT_RECORD_STATUSES, PAYMENT_TYPES } from '@nh/shared';
+import { PAYMENT_METHODS, PAYMENT_RECORD_STATUSES, PAYMENT_TYPES } from '../domain/enums.js';
 import { sequelize } from '../lib/db.js';
 import { enumColumn, foreignKeyColumn, idColumn, moneyColumn, timestampColumns } from './columns.js';
 

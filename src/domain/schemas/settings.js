@@ -24,10 +24,10 @@ const sectionHeading = z.object({
 const statItem = z.object({ value: requiredText(40), label: requiredText(120) });
 const numberedItem = z.object({ title: requiredText(120), text: requiredText(500) });
 
-export const gstPercentSettingSchema = z.int().min(0).max(28);
-export const defaultBookingPercentSettingSchema = z.int().min(MIN_BOOKING_PERCENT).max(MAX_BOOKING_PERCENT);
+const gstPercentSettingSchema = z.int().min(0).max(28);
+const defaultBookingPercentSettingSchema = z.int().min(MIN_BOOKING_PERCENT).max(MAX_BOOKING_PERCENT);
 
-export const companySettingSchema = z.object({
+const companySettingSchema = z.object({
   name: requiredText(120),
   legalName: text(160),
   tagline: text(300),
@@ -41,13 +41,13 @@ export const companySettingSchema = z.object({
   mapEmbedUrl: optionalUrl,
 });
 
-export const socialSettingSchema = z.object({
+const socialSettingSchema = z.object({
   instagram: optionalUrl,
   facebook: optionalUrl,
   youtube: optionalUrl,
 });
 
-export const homeSettingSchema = z.object({
+const homeSettingSchema = z.object({
   hero: z.object({
     overline: text(80),
     heading: text(160),
@@ -69,7 +69,7 @@ export const homeSettingSchema = z.object({
   ctaBanner: z.object({ title: text(160), text: text(500), buttonLabel: text(60) }),
 });
 
-export const aboutSettingSchema = z.object({
+const aboutSettingSchema = z.object({
   hero: z.object({ title: text(160), subtitle: text(500), imageUrl: optionalUrl, imagePublicId: publicId }),
   story: z.object({
     overline: text(80),
@@ -100,7 +100,7 @@ export const aboutSettingSchema = z.object({
   }),
 });
 
-export const contactSettingSchema = z.object({
+const contactSettingSchema = z.object({
   hero: z.object({ title: text(160), subtitle: text(500), imageUrl: optionalUrl, imagePublicId: publicId }),
   channels: z
     .array(z.object({ title: requiredText(60), value: requiredText(120), note: text(120), href: text(300) }))
@@ -111,7 +111,7 @@ export const contactSettingSchema = z.object({
   quickLinks: z.array(z.object({ label: requiredText(120), href: requiredText(300) })).default([]),
 });
 
-export const bookingSettingSchema = z.object({
+const bookingSettingSchema = z.object({
   pickupPoints: z.array(requiredText(160)).default([]),
   termsText: text(5000),
   freeCancellationNote: text(200),
@@ -119,13 +119,13 @@ export const bookingSettingSchema = z.object({
 });
 
 const policyItem = z.object({ title: requiredText(160), content: text(100_000) });
-export const policiesSettingSchema = z.object({
+const policiesSettingSchema = z.object({
   cancellation: policyItem,
   privacy: policyItem,
   terms: policyItem,
 });
 
-export const seoSettingSchema = z.object({
+const seoSettingSchema = z.object({
   defaultTitle: requiredText(160),
   titleTemplate: text(160),
   description: text(320),
@@ -133,13 +133,13 @@ export const seoSettingSchema = z.object({
   ogImagePublicId: publicId,
 });
 
-export const emailSettingSchema = z.object({
+const emailSettingSchema = z.object({
   senderName: requiredText(120),
   footerText: text(500),
 });
 
 /** Hero texts for listing pages and the Offers page explainer. */
-export const pagesSettingSchema = z.object({
+const pagesSettingSchema = z.object({
   packages: z.object({
     title: text(160),
     subtitle: text(500),
