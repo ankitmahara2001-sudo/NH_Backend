@@ -74,3 +74,4 @@ of truth for validation: the website and admin panel have their own copies of th
 - Migrations and seeders are CommonJS (`.cjs`) because sequelize-cli loads them with `require()`.
 - Seeded images are placeholders from Cloudinary's public demo account.
 - ESLint stays on 9.x to match the website's `eslint-config-next`.
+# NH_Backend
