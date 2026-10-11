@@ -1,7 +1,9 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import * as bookings from '../../controllers/customerBookingController.js';
+import { createBookingSchema, paymentVerifySchema } from '../../domain/schemas/booking.js';
 import { requireCustomer } from '../../middlewares/auth.js';
+import { bookingLimiter } from '../../middlewares/rateLimit.js';
 import { validate } from '../../middlewares/validate.js';
 
 const bookingNumberParams = z.object({
@@ -16,4 +18,17 @@ customerBookingRoutes.get(
   requireCustomer,
   validate({ params: bookingNumberParams }),
   bookings.myBooking,
+);
+customerBookingRoutes.post(
+  '/bookings',
+  bookingLimiter,
+  requireCustomer,
+  validate({ body: createBookingSchema }),
+  bookings.create,
+);
+customerBookingRoutes.post(
+  '/payments/verify',
+  requireCustomer,
+  validate({ body: paymentVerifySchema }),
+  bookings.verify,
 );

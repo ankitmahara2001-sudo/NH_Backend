@@ -10,6 +10,9 @@ export const DEFAULT_MIN_DAYS_BEFORE_BOOKING = 3;
 
 export const OTP_LENGTH = 6;
 
+/** An unpaid booking holds its seats this long, then the expiry job cancels it. */
+export const PENDING_BOOKING_MINUTES = 30;
+
 /** Upper bound for any single traveller counter (adults, children, infants, units). */
 export const MAX_TRAVELLER_COUNT = 20;
 export const MAX_REVIEW_RATING = 5;

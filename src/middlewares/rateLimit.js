@@ -40,3 +40,10 @@ export const enquiryLimiter = limiter(
 
 /** Price quotes (the booking card calls this on every change). */
 export const quoteLimiter = limiter(MINUTE_MS, 60, 'Too many requests. Please slow down.');
+
+/** Creating bookings (each one holds seats and opens a payment order). */
+export const bookingLimiter = limiter(
+  15 * MINUTE_MS,
+  20,
+  'Too many booking attempts. Please wait a few minutes and try again.',
+);

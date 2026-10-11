@@ -32,6 +32,16 @@ npm run db:reset   # create the tables and load the demo data
 npm run dev        # http://localhost:5000/api/health → "status": "ok", "db": "up"
 ```
 
+### Bookings and payments locally
+
+Put Razorpay **test-mode** keys in `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` and pay with
+Razorpay's test cards or UPI id `success@razorpay`. After checkout the site calls
+`POST /api/payments/verify`, which confirms the booking as soon as Razorpay reports the payment
+captured, so the webhook is optional locally. To test the webhook too, expose the API with a tunnel
+(e.g. `ngrok http 5000`), add `https://<tunnel>/api/webhooks/razorpay` in the Razorpay test-mode
+webhook settings (events `payment.captured`, `payment.failed`) and set `RAZORPAY_WEBHOOK_SECRET`.
+Unpaid bookings hold their seats for 30 minutes; a job inside the API cancels them every 5 minutes.
+
 ## Commands
 
 | Command                   | What it does                                                                    |

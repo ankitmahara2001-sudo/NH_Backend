@@ -22,10 +22,12 @@ describe('admin content', () => {
     }
   });
 
-  it('returns dashboard numbers (zero before any booking)', async () => {
+  it('returns dashboard numbers', async () => {
     const res = await admin.get('/api/admin/dashboard');
     expect(res.status).toBe(200);
-    expect(res.body.data).toMatchObject({ bookingsToday: 0, revenueThisMonth: 0, balancePending: 0 });
+    // Other test files create bookings in the same database, so only the shape is fixed.
+    const amount = expect.any(Number);
+    expect(res.body.data).toMatchObject({ bookingsToday: amount, revenueThisMonth: amount, balancePending: amount });
     expect(res.body.data.upcomingDepartures.length).toBeGreaterThan(0);
   });
 

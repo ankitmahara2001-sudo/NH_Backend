@@ -3,6 +3,7 @@ import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 import { env } from './config/env.js';
+import { razorpayWebhook } from './controllers/webhookController.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFound } from './middlewares/notFound.js';
 import { requestLogger } from './middlewares/requestLogger.js';
@@ -29,7 +30,13 @@ export function createApp() {
     }),
   );
 
-  // The Razorpay webhook (Phase 5) must be mounted here with express.raw(), before express.json().
+  // The signature covers the exact bytes Razorpay sent, so this route gets the raw body
+  // and must stay before express.json().
+  app.post(
+    '/api/webhooks/razorpay',
+    express.raw({ type: 'application/json', limit: JSON_BODY_LIMIT }),
+    razorpayWebhook,
+  );
 
   app.use(express.json({ limit: JSON_BODY_LIMIT }));
   app.use(cookieParser());
