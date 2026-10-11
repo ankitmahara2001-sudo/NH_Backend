@@ -6,7 +6,7 @@ import { z } from 'zod';
 dotenv.config({ path: fileURLToPath(new URL('../../.env', import.meta.url)), quiet: true });
 
 // All environment variables the API reads, validated once at start-up (fail fast).
-// Integrations (Razorpay, Cloudinary, SMTP) may stay empty in development and test;
+// Integrations (Razorpay, Cloudinary, email) may stay empty in development and test;
 // they are required in production.
 
 const MIN_SECRET_LENGTH = 32;
@@ -56,6 +56,8 @@ const envSchema = z
     CLOUDINARY_API_SECRET: optionalString,
     CLOUDINARY_ROOT_FOLDER: z.string().min(1).default('norther-harier'),
 
+    // Email: BREVO_API_KEY (HTTPS API) when set, otherwise SMTP.
+    BREVO_API_KEY: optionalString,
     SMTP_HOST: optionalString,
     SMTP_PORT: z.coerce.number().int().positive().default(465),
     SMTP_SECURE: booleanFlag,
@@ -77,14 +79,18 @@ const envSchema = z
       'CLOUDINARY_CLOUD_NAME',
       'CLOUDINARY_API_KEY',
       'CLOUDINARY_API_SECRET',
-      'SMTP_HOST',
-      'SMTP_USER',
-      'SMTP_PASSWORD',
       'MAIL_FROM_ADDRESS',
       'ADMIN_NOTIFY_EMAIL',
     ];
     for (const key of requiredInProduction) {
       if (!env[key]) ctx.addIssue({ code: 'custom', path: [key], message: 'Required in production' });
+    }
+    if (!env.BREVO_API_KEY && !(env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASSWORD)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['BREVO_API_KEY'],
+        message: 'Required in production unless SMTP_HOST, SMTP_USER and SMTP_PASSWORD are set',
+      });
     }
     if (env.MAIL_DEV_LOG) {
       ctx.addIssue({ code: 'custom', path: ['MAIL_DEV_LOG'], message: 'Must be false in production' });

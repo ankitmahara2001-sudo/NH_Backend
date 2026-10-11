@@ -26,6 +26,9 @@ In `.env`, set at least `DATABASE_URL`, `TEST_DATABASE_URL`, the two `JWT_*_SECR
 (`node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`) and `ADMIN_EMAIL` /
 `ADMIN_PASSWORD` (10+ characters). Razorpay, Cloudinary and SMTP may stay empty in development; keep
 `MAIL_DEV_LOG=true` to print emails (and login codes) in the console. Never commit `.env`.
+Hosts that block outgoing SMTP (e.g. Render's free plan) need `BREVO_API_KEY` instead of the
+`SMTP_*` settings: emails then go through Brevo's HTTPS API, from a `MAIL_FROM_ADDRESS` verified
+as a sender in Brevo.
 
 ```bash
 npm run db:reset   # create the tables and load the demo data
