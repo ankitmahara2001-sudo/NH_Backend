@@ -36,6 +36,11 @@ export function button(label, href) {
   return `<p style="margin:24px 0"><a href="${escapeHtml(href)}" style="display:inline-block;padding:12px 24px;border-radius:999px;background:${COLORS.navy};color:#FFFFFF;font-weight:700;text-decoration:none">${escapeHtml(label)}</a></p>`;
 }
 
+/** A small section heading between blocks of rows. */
+export function heading(text) {
+  return `<h2 style="margin:24px 0 0;font-size:16px;line-height:22px;color:${COLORS.text}">${escapeHtml(text)}</h2>`;
+}
+
 export function paragraph(text) {
   return `<p style="margin:0 0 14px;font-size:15px;line-height:24px;color:${COLORS.text}">${escapeHtml(text)}</p>`;
 }

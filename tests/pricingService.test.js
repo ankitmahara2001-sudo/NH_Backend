@@ -110,6 +110,35 @@ describe('pricingService', () => {
     expect(full.balanceDue).toBe(0);
   });
 
+  it('takes a manual (admin) discount off after the coupon and before GST, capped at the price', () => {
+    // ₹12,999 × 2 − NORTH10 ₹2,000 − manual ₹1,000 = ₹22,998 taxable; GST 5% = ₹1,150 (rounded).
+    const result = calculatePrice({
+      unitPrice: 1299900,
+      quantity: 2,
+      coupon: NORTH10,
+      gstPercent: 5,
+      bookingAmountPercent: 20,
+      manualDiscount: 100000,
+    });
+    expect(result).toMatchObject({
+      discount: 200000,
+      manualDiscount: 100000,
+      taxable: 2299800,
+      gstAmount: 115000,
+      total: 2414800,
+    });
+    const capped = calculatePrice({
+      unitPrice: 500000,
+      quantity: 1,
+      gstPercent: 5,
+      bookingAmountPercent: 20,
+      manualDiscount: 900000,
+    });
+    expect(capped).toMatchObject({ manualDiscount: 500000, taxable: 0, total: 0 });
+    expect(calculatePrice({ unitPrice: 100, quantity: 1, gstPercent: 5, bookingAmountPercent: 20 }))
+      .toHaveProperty('manualDiscount', 0);
+  });
+
   describe('couponProblem (validation order)', () => {
     const base = {
       now: NOW,

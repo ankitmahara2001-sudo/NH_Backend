@@ -28,6 +28,9 @@ export const DISCOUNT_TYPES = ['percent', 'flat'];
 
 export const BOOKING_STATUSES = ['pending', 'confirmed', 'completed', 'cancelled'];
 
+/** Where a booking was made: the public website (online payment) or the admin panel (offline payment). */
+export const BOOKING_SOURCES = ['website', 'admin'];
+
 export const PAYMENT_STATUSES = ['unpaid', 'advance_paid', 'fully_paid', 'refunded'];
 
 export const PAYMENT_TYPES = ['advance', 'balance', 'refund'];

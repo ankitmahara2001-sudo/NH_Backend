@@ -12,11 +12,13 @@ const fieldError = (field, message) => AppError.badRequest(message, { [field]: m
  * all_season: travelDate ≥ today + minDaysBeforeBooking and outside blocked ranges.
  * fixed_date: an active, future departure of this package with enough seats left.
  * Pass `lock` (with a transaction) when reserving seats, so concurrent bookings queue up.
+ * `ignoreLeadTime` (admin-panel bookings) allows any all_season date from today, skipping
+ * minDaysBeforeBooking; blocked dates still apply.
  */
 export async function resolveTravelDate(
   pkg,
   { travelDate, departureId, seats },
-  { transaction, lock = false } = {},
+  { transaction, lock = false, ignoreLeadTime = false } = {},
 ) {
   const today = todayIst();
 
@@ -50,7 +52,9 @@ export async function resolveTravelDate(
 
   if (!travelDate) throw fieldError('travelDate', 'Choose a travel date.');
   const earliest = addDays(today, pkg.minDaysBeforeBooking);
-  if (travelDate < earliest) {
+  if (ignoreLeadTime) {
+    if (travelDate < today) throw fieldError('travelDate', 'Choose today or a later date.');
+  } else if (travelDate < earliest) {
     throw fieldError(
       'travelDate',
       `Bookings open from ${pkg.minDaysBeforeBooking} days ahead. Choose a date from ${earliest}.`,

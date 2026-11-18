@@ -51,11 +51,21 @@ export function couponDiscount(coupon, subtotal) {
  * @param {object|null} input.coupon          Validated coupon or null
  * @param {number} input.gstPercent           From site settings
  * @param {number} input.bookingAmountPercent Package override ?? site default (1–100)
+ * @param {number} [input.manualDiscount]     Admin-panel bookings: extra discount after the coupon,
+ *                                            before GST; capped so the taxable amount never goes below 0
  */
-export function calculatePrice({ unitPrice, quantity, coupon = null, gstPercent, bookingAmountPercent }) {
+export function calculatePrice({
+  unitPrice,
+  quantity,
+  coupon = null,
+  gstPercent,
+  bookingAmountPercent,
+  manualDiscount = 0,
+}) {
   const subtotal = unitPrice * quantity;
   const discount = couponDiscount(coupon, subtotal);
-  const taxable = subtotal - discount;
+  const appliedManualDiscount = Math.max(0, Math.min(manualDiscount, subtotal - discount));
+  const taxable = subtotal - discount - appliedManualDiscount;
   const gstAmount = roundToRupee((taxable * gstPercent) / PERCENT);
   const total = taxable + gstAmount;
   const payNow = roundToRupee((total * bookingAmountPercent) / PERCENT);
@@ -64,6 +74,7 @@ export function calculatePrice({ unitPrice, quantity, coupon = null, gstPercent,
     quantity,
     subtotal,
     discount,
+    manualDiscount: appliedManualDiscount,
     taxable,
     gstPercent,
     gstAmount,

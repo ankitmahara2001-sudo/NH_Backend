@@ -1,5 +1,5 @@
 import { DataTypes, Model } from 'sequelize';
-import { BOOKING_STATUSES, PAYMENT_STATUSES, PRICE_TYPES } from '../domain/enums.js';
+import { BOOKING_SOURCES, BOOKING_STATUSES, PAYMENT_STATUSES, PRICE_TYPES } from '../domain/enums.js';
 import { sequelize } from '../lib/db.js';
 import { enumColumn, foreignKeyColumn, idColumn, moneyColumn, timestampColumns } from './columns.js';
 
@@ -28,6 +28,7 @@ Booking.init(
     leadEmail: { type: DataTypes.STRING(255), allowNull: false },
     leadPhone: { type: DataTypes.STRING(20), allowNull: false },
     specialRequests: { type: DataTypes.TEXT, allowNull: true },
+    source: { ...enumColumn(BOOKING_SOURCES), defaultValue: 'website' },
     status: { ...enumColumn(BOOKING_STATUSES), defaultValue: 'pending' },
     paymentStatus: { ...enumColumn(PAYMENT_STATUSES), defaultValue: 'unpaid' },
     // ---- Price snapshot (money in paise) ----
@@ -39,6 +40,9 @@ Booking.init(
     subtotal: moneyColumn(),
     couponCode: { type: DataTypes.STRING(40), allowNull: true },
     discountAmount: { ...moneyColumn(), defaultValue: 0 },
+    // Extra discount given by an admin on an admin-panel booking, before GST.
+    manualDiscount: { ...moneyColumn(), defaultValue: 0 },
+    manualDiscountReason: { type: DataTypes.STRING(160), allowNull: true },
     gstPercent: { type: DataTypes.INTEGER, allowNull: false },
     gstAmount: moneyColumn(),
     totalAmount: moneyColumn(),

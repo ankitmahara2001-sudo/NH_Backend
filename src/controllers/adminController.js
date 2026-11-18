@@ -1,6 +1,12 @@
 import { createUploadSignature, destroyImage, isOwnPublicId } from '../lib/cloudinary.js';
 import { AppError } from '../lib/AppError.js';
-import { getBookingAdmin, listBookings } from '../services/admin/bookingAdminService.js';
+import {
+  createAdminBooking,
+  getBookingAdmin,
+  listBookings,
+  quoteAdminBooking,
+  recordBalancePayment,
+} from '../services/admin/bookingAdminService.js';
 import { bulkCreateGalleryImages } from '../services/admin/contentAdminService.js';
 import * as coupons from '../services/admin/couponAdminService.js';
 import { getCustomer, listCustomers } from '../services/admin/customerAdminService.js';
@@ -48,6 +54,16 @@ export const customerGet = async (req, res) => ok(res, await getCustomer(req.val
 
 export const bookingList = async (req, res) => res.json(await listBookings(req.validated.query));
 export const bookingGet = async (req, res) => ok(res, await getBookingAdmin(req.validated.params.id));
+export const bookingQuote = async (req, res) => ok(res, await quoteAdminBooking(req.validated.body));
+// `meta.emailSent` tells the admin whether the receipt email went out.
+export const bookingCreate = async (req, res) => {
+  const { booking, emailSent } = await createAdminBooking(req.validated.body);
+  res.status(201).json({ data: booking, meta: { emailSent } });
+};
+export const bookingRecordPayment = async (req, res) => {
+  const { booking, emailSent } = await recordBalancePayment(req.validated.params.id, req.validated.body);
+  res.status(201).json({ data: booking, meta: { emailSent } });
+};
 
 export const enquiryList = async (req, res) => res.json(await listEnquiries(req.validated.query));
 export const enquiryUpdate = async (req, res) =>

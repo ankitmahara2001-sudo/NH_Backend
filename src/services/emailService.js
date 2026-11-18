@@ -5,6 +5,7 @@ import {
   bookingConfirmedAdminEmail,
   bookingConfirmedCustomerEmail,
   newEnquiryEmail,
+  offlineBookingReceiptEmail,
   otpEmail,
 } from '../emails/templates.js';
 import { logger } from '../lib/logger.js';
@@ -56,8 +57,13 @@ export async function sendBookingConfirmedEmails(booking) {
   return customer;
 }
 
-export const sendBalanceReceivedEmail = (booking, amount) =>
-  deliver(booking.leadEmail, (branding) => balanceReceivedEmail({ booking, amount, branding }));
+/** Receipt for an admin-panel booking paid offline. `payment` is the Payment row just recorded. */
+export const sendOfflineBookingReceiptEmail = (booking, payment) =>
+  deliver(booking.leadEmail, (branding) => offlineBookingReceiptEmail({ booking, payment, branding }));
+
+/** Receipt for a balance payment recorded later by the admin. */
+export const sendBalanceReceivedEmail = (booking, payment) =>
+  deliver(booking.leadEmail, (branding) => balanceReceivedEmail({ booking, payment, branding }));
 
 export const sendBookingCancelledEmail = (booking, reason) =>
   deliver(booking.leadEmail, (branding) => bookingCancelledEmail({ booking, reason, branding }));

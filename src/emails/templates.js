@@ -1,5 +1,5 @@
-import { formatDateRange, formatRupees } from '../domain/format.js';
-import { button, detailsTable, detailsText, escapeHtml, paragraph, renderLayout } from './layout.js';
+import { formatDate, formatDateRange, formatRupees } from '../domain/format.js';
+import { button, detailsTable, detailsText, escapeHtml, heading, paragraph, renderLayout } from './layout.js';
 
 // One function per email. Each returns { subject, html, text }.
 // `branding` = { companyName, footerText, siteUrl, supportPhone }.
@@ -25,6 +25,72 @@ function bookingRows(booking) {
     ['Paid', formatRupees(booking.amountPaid)],
     ['Balance due', formatRupees(booking.balanceDue)],
   ];
+}
+
+/** Trip details only (no money). */
+function tripRows(booking) {
+  return [
+    ['Booking ID', booking.bookingNumber],
+    ['Package', booking.packageTitle],
+    ['Option', booking.priceLabel],
+    ['Dates', formatDateRange(booking.travelDate, booking.endDate)],
+    ['Travellers', travellersLabel(booking)],
+    ...(booking.pickupPoint ? [['Pickup', booking.pickupPoint]] : []),
+  ];
+}
+
+/** Line-by-line price: subtotal, coupon, special discount, GST, total, paid and balance. */
+function priceRows(booking) {
+  const minus = (paise) => `−${formatRupees(paise)}`;
+  return [
+    [`${formatRupees(booking.unitPrice)} × ${booking.quantity}`, formatRupees(booking.subtotal)],
+    ...(booking.discountAmount ? [[`Coupon ${booking.couponCode}`, minus(booking.discountAmount)]] : []),
+    ...(booking.manualDiscount
+      ? [
+          [
+            booking.manualDiscountReason ? `Discount (${booking.manualDiscountReason})` : 'Special discount',
+            minus(booking.manualDiscount),
+          ],
+        ]
+      : []),
+    [`GST (${booking.gstPercent}%)`, formatRupees(booking.gstAmount)],
+    ['Total (incl. GST)', formatRupees(booking.totalAmount)],
+    ['Paid so far', formatRupees(booking.amountPaid)],
+    ['Balance due', formatRupees(booking.balanceDue)],
+  ];
+}
+
+const METHOD_LABELS = {
+  razorpay: 'Online (Razorpay)',
+  cash: 'Cash',
+  upi: 'UPI',
+  bank_transfer: 'Bank transfer',
+  other: 'Other',
+};
+
+/** The payment this email is a receipt for. */
+function receiptRows(booking, payment) {
+  return [
+    ['Receipt no.', `${booking.bookingNumber}/${payment.id}`],
+    ['Amount received', formatRupees(payment.amount)],
+    ['Paid by', METHOD_LABELS[payment.method] ?? payment.method],
+    ...(payment.reference ? [['Reference', payment.reference]] : []),
+    ['Date', formatDate(payment.paidAt)],
+  ];
+}
+
+/** Body with headed sections: [[heading, rows], ...]. */
+function sections(intro, blocks, outro = '') {
+  return {
+    bodyHtml:
+      paragraph(intro) +
+      blocks.map(([title, rows]) => heading(title) + detailsTable(rows)).join('') +
+      (outro ? paragraph(outro) : ''),
+    bodyText:
+      `${intro}\n\n` +
+      blocks.map(([title, rows]) => `${title}\n${detailsText(rows)}`).join('\n\n') +
+      (outro ? `\n\n${outro}` : ''),
+  };
 }
 
 export function otpEmail({ code, expiresInMinutes, branding }) {
@@ -81,19 +147,49 @@ export function bookingConfirmedAdminEmail({ booking, branding }) {
   };
 }
 
-export function balanceReceivedEmail({ booking, amount, branding }) {
+/** Receipt for a booking made in the admin panel and paid offline (cash, UPI, bank transfer). */
+export function offlineBookingReceiptEmail({ booking, payment, branding }) {
+  const fullyPaid = booking.balanceDue === 0;
+  const title = fullyPaid ? 'Your booking is confirmed and fully paid' : 'Your booking is confirmed';
+  const intro = `Hi ${booking.leadName}, thank you for booking with ${branding.companyName}. We received ${formatRupees(payment.amount)} for booking ${booking.bookingNumber}. This email is your receipt.`;
+  const outro = fullyPaid
+    ? 'Your trip coordinator will call you 48 hours before departure.'
+    : `The balance of ${formatRupees(booking.balanceDue)} is payable before departure. Your trip coordinator will call you 48 hours before departure.`;
+  const body = sections(
+    intro,
+    [
+      ['Payment received', receiptRows(booking, payment)],
+      ['Trip', tripRows(booking)],
+      ['Price', priceRows(booking)],
+    ],
+    outro,
+  );
+  return {
+    subject: `Booking confirmed: ${booking.bookingNumber} · Receipt for ${formatRupees(payment.amount)}`,
+    ...renderLayout({ title, ...body, branding }),
+  };
+}
+
+/** Receipt for a later (balance) payment recorded by the admin. */
+export function balanceReceivedEmail({ booking, payment, branding }) {
   const fullyPaid = booking.balanceDue === 0;
   const title = fullyPaid ? 'Your booking is fully paid' : 'Payment received';
-  const intro = `Hi ${booking.leadName}, we received ${formatRupees(amount)} for booking ${booking.bookingNumber}.`;
-  const rows = bookingRows(booking);
+  const intro = `Hi ${booking.leadName}, we received ${formatRupees(payment.amount)} for booking ${booking.bookingNumber}. This email is your receipt.`;
+  const outro = fullyPaid
+    ? ''
+    : `The balance of ${formatRupees(booking.balanceDue)} is payable before departure.`;
+  const body = sections(
+    intro,
+    [
+      ['Payment received', receiptRows(booking, payment)],
+      ['Trip', tripRows(booking)],
+      ['Price', priceRows(booking)],
+    ],
+    outro,
+  );
   return {
     subject: `${title}: ${booking.bookingNumber}`,
-    ...renderLayout({
-      title,
-      bodyHtml: paragraph(intro) + detailsTable(rows),
-      bodyText: `${intro}\n\n${detailsText(rows)}`,
-      branding,
-    }),
+    ...renderLayout({ title, ...body, branding }),
   };
 }
 

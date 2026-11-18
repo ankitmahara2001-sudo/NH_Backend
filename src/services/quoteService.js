@@ -1,3 +1,4 @@
+import { formatRupees } from '../domain/format.js';
 import { AppError } from '../lib/AppError.js';
 import { Coupon, CouponRedemption, Package, PackagePrice } from '../models/index.js';
 import { resolveTravelDate } from './availabilityService.js';
@@ -69,17 +70,18 @@ async function evaluateCoupon(code, { pkg, price, subtotal, customerId, now, tra
  * @param {number|null} [options.customerId]  For the per-customer coupon limit
  * @param {boolean} [options.strict]          Booking creation: an invalid coupon is an error
  * @param {object} [options.transaction]      Booking creation: lock the departure row
+ * @param {boolean} [options.admin]           Admin panel: allows input.manualDiscount and short-notice dates
  */
 export async function buildQuote(
   input,
-  { customerId = null, strict = false, transaction, now = new Date() } = {},
+  { customerId = null, strict = false, transaction, now = new Date(), admin = false } = {},
 ) {
   const { pkg, price } = await loadPackageAndPrice(input.packageId, input.priceId, transaction);
   const quantities = validateCounts(pkg, price, input.counts);
   const dates = await resolveTravelDate(
     pkg,
     { ...input, seats: quantities.seats },
-    { transaction, lock: Boolean(transaction) },
+    { transaction, lock: Boolean(transaction), ignoreLeadTime: admin },
   );
 
   const unitPrice = sellingPrice(price);
@@ -101,7 +103,15 @@ export async function buildQuote(
     coupon,
     gstPercent: settings.gstPercent,
     bookingAmountPercent: pkg.bookingAmountPercent ?? settings.defaultBookingPercent,
+    manualDiscount: admin ? (input.manualDiscount ?? 0) : 0,
   });
+  if (admin && input.manualDiscount > breakdown.manualDiscount) {
+    const max = breakdown.subtotal - breakdown.discount;
+    throw fieldError(
+      'manualDiscount',
+      `The discount cannot be more than ${formatRupees(max)} (the price after any coupon, before GST).`,
+    );
+  }
 
   return {
     package: pkg,

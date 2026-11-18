@@ -1,5 +1,10 @@
 import { ENQUIRY_STATUSES, SITE_SETTING_KEYS } from '../../domain/enums.js';
-import { adminBookingListQuerySchema } from '../../domain/schemas/booking.js';
+import {
+  adminBookingListQuerySchema,
+  adminBookingQuoteSchema,
+  adminCreateBookingSchema,
+  recordBalancePaymentSchema,
+} from '../../domain/schemas/booking.js';
 import { adminChangePasswordSchema, adminLoginSchema } from '../../domain/schemas/auth.js';
 import {
   blogPostSchema,
@@ -77,11 +82,19 @@ adminRoutes.get('/coupons/:id', validate(byId), admin.couponGet);
 adminRoutes.put('/coupons/:id', validate({ ...byId, body: couponSchema }), admin.couponUpdate);
 adminRoutes.delete('/coupons/:id', validate(byId), admin.couponDelete);
 
-// ---- Customers, bookings (read-only until Phase 5), enquiries --------------------------------
+// ---- Customers, bookings, enquiries -----------------------------------------------------------
 adminRoutes.get('/customers', validate({ query: searchPageQuery }), admin.customerList);
 adminRoutes.get('/customers/:id', validate(byId), admin.customerGet);
 adminRoutes.get('/bookings', validate({ query: adminBookingListQuerySchema }), admin.bookingList);
 adminRoutes.get('/bookings/:id', validate(byId), admin.bookingGet);
+// Offline (cash / UPI / bank transfer) bookings and payments, confirmed at once with a receipt email.
+adminRoutes.post('/bookings/quote', validate({ body: adminBookingQuoteSchema }), admin.bookingQuote);
+adminRoutes.post('/bookings', validate({ body: adminCreateBookingSchema }), admin.bookingCreate);
+adminRoutes.post(
+  '/bookings/:id/payments',
+  validate({ ...byId, body: recordBalancePaymentSchema }),
+  admin.bookingRecordPayment,
+);
 adminRoutes.get('/enquiries', validate({ query: enquiryQuery }), admin.enquiryList);
 adminRoutes.patch('/enquiries/:id', validate({ ...byId, body: enquiryStatusSchema }), admin.enquiryUpdate);
 

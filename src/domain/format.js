@@ -21,7 +21,7 @@ const DATE_FORMAT = new Intl.DateTimeFormat('en-IN', {
 });
 
 /** "2026-10-18" or a Date -> "18 Oct 2026". Plain YYYY-MM-DD dates are read as calendar dates. */
-function formatDate(value) {
+export function formatDate(value) {
   if (!value) return '';
   const date =
     typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)

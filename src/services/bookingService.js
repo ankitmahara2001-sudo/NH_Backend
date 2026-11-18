@@ -19,7 +19,7 @@ const BOOKING_SEQUENCE_DIGITS = 5;
 const fieldError = (field, message) => AppError.badRequest(message, { [field]: message });
 
 /** NH-<year>-<5-digit sequence>; the database sequence keeps it unique under concurrency. */
-async function nextBookingNumber(transaction) {
+export async function nextBookingNumber(transaction) {
   const [[{ value }]] = await sequelize.query("SELECT nextval('booking_number_seq') AS value", {
     transaction,
   });
@@ -28,7 +28,7 @@ async function nextBookingNumber(transaction) {
 }
 
 /** Every person travelling (paying travellers + free infants) needs a name, age and gender. */
-function assertTravellerCount(travellers, quantities) {
+export function assertTravellerCount(travellers, quantities) {
   const expected = quantities.seats + quantities.infants;
   if (travellers.length !== expected) {
     throw fieldError(
@@ -39,7 +39,7 @@ function assertTravellerCount(travellers, quantities) {
 }
 
 /** Snapshot of the price and choices, so later package or price edits never change a booking. */
-function bookingValues({ quote, input, customer, bookingNumber, now }) {
+export function bookingValues({ quote, input, customer, bookingNumber, now }) {
   const { breakdown, quantities, dates } = quote;
   return {
     bookingNumber,
@@ -67,6 +67,7 @@ function bookingValues({ quote, input, customer, bookingNumber, now }) {
     subtotal: breakdown.subtotal,
     couponCode: quote.coupon?.code ?? null,
     discountAmount: breakdown.discount,
+    manualDiscount: breakdown.manualDiscount,
     gstPercent: breakdown.gstPercent,
     gstAmount: breakdown.gstAmount,
     totalAmount: breakdown.total,

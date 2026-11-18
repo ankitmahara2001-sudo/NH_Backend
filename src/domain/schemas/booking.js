@@ -1,7 +1,15 @@
 import { z } from 'zod';
 import { MAX_TRAVELLER_COUNT } from '../constants.js';
 import { BOOKING_STATUSES, GENDERS, OFFLINE_PAYMENT_METHODS, PAYMENT_STATUSES } from '../enums.js';
-import { isoDateSchema, optionalText, phoneSchema, positivePaiseSchema, requiredText } from './common.js';
+import {
+  emailSchema,
+  isoDateSchema,
+  optionalText,
+  paiseSchema,
+  phoneSchema,
+  positivePaiseSchema,
+  requiredText,
+} from './common.js';
 
 const counter = (min) => z.int().min(min).max(MAX_TRAVELLER_COUNT);
 
@@ -58,12 +66,52 @@ export const paymentVerifySchema = z.object({
 
 // ---- Admin booking actions ---------------------------------------------------------
 
-export const recordBalancePaymentSchema = z.object({
-  method: z.enum(OFFLINE_PAYMENT_METHODS),
-  amount: positivePaiseSchema,
-  reference: optionalText(120),
-  paidAt: isoDateSchema,
-  notes: optionalText(1000),
+/**
+ * An offline payment the admin collected (cash, UPI, bank transfer). `collectedInFull` takes the
+ * whole amount due, so the admin does not have to type it; otherwise `amount` is required.
+ * `paidAt` defaults to today. `sendEmail` mails the customer a receipt.
+ */
+const offlinePaymentSchema = z
+  .object({
+    method: z.enum(OFFLINE_PAYMENT_METHODS),
+    collectedInFull: z.boolean().default(false),
+    amount: positivePaiseSchema.nullish(),
+    reference: optionalText(120),
+    paidAt: isoDateSchema.optional(),
+    notes: optionalText(1000),
+  })
+  .refine((payment) => payment.collectedInFull || payment.amount, {
+    message: 'Enter the amount collected.',
+    path: ['amount'],
+  });
+
+const adminTripChoiceShape = {
+  ...tripChoiceShape,
+  // Extra discount in paise, after any coupon and before GST.
+  manualDiscount: paiseSchema.default(0),
+};
+
+/** POST /admin/bookings/quote — live price for the admin booking form. */
+export const adminBookingQuoteSchema = z.object(adminTripChoiceShape);
+
+/** POST /admin/bookings — a booking paid offline, confirmed at once. */
+export const adminCreateBookingSchema = z.object({
+  ...adminTripChoiceShape,
+  manualDiscountReason: optionalText(160),
+  pickupPoint: optionalText(160),
+  leadName: requiredText(120),
+  leadEmail: emailSchema,
+  leadPhone: phoneSchema,
+  specialRequests: optionalText(2000),
+  // First traveller is the lead traveller.
+  travellers: z.array(travellerSchema).min(1, 'Add traveller details.'),
+  payment: offlinePaymentSchema,
+  sendEmail: z.boolean().default(true),
+});
+
+/** POST /admin/bookings/:id/payments — balance collected later on a confirmed booking. */
+export const recordBalancePaymentSchema = offlinePaymentSchema.safeExtend({
+  sendEmail: z.boolean().default(true),
 });
 
 export const cancelBookingSchema = z.object({ reason: requiredText(1000) });

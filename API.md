@@ -86,3 +86,34 @@ curl -b admin.txt -X PATCH http://localhost:5000/api/admin/auth/password -H "Con
   -d '{"currentPassword":"<old>","newPassword":"<new, 10+ characters>"}'
 curl -b admin.txt -X POST http://localhost:5000/api/admin/auth/logout
 ```
+
+## Admin bookings paid offline (cash, UPI, bank transfer)
+
+Money is in paise. These bookings skip Razorpay: they are confirmed at once (`source: "admin"`) and the
+customer is mailed a receipt with the full price breakdown (coupon, manual discount, GST, total, amount
+received, balance due). The response's `meta.emailSent` says whether the receipt went out.
+
+| Method | Path                           | Notes                                                                                   |
+| ------ | ------------------------------ | --------------------------------------------------------------------------------------- |
+| POST   | `/admin/bookings/quote`        | Same body as `/pricing/quote` plus `manualDiscount` (paise, before GST)                  |
+| POST   | `/admin/bookings`              | Trip choice + `manualDiscount?`, `manualDiscountReason?`, lead details, `travellers`, `payment`, `sendEmail?` |
+| POST   | `/admin/bookings/:id/payments` | Balance on a confirmed booking: `{ method, amount \| collectedInFull, reference?, paidAt?, notes?, sendEmail? }` |
+
+`payment` is `{ method: cash|upi|bank_transfer|other, amount?, collectedInFull?, reference?, paidAt?, notes? }`.
+`collectedInFull: true` takes the whole total (or balance) so no amount is needed. `paidAt` (YYYY-MM-DD,
+default today) cannot be in the future. The customer account is found or created from `leadEmail`.
+Admin bookings ignore the package's minimum days before booking (any date from today); seats and
+blocked dates are still checked.
+
+```bash
+curl -b admin.txt -X POST http://localhost:5000/api/admin/bookings -H "Content-Type: application/json" -d '{
+  "packageId": 1, "priceId": 1, "departureId": 3, "counts": { "adults": 2 },
+  "manualDiscount": 100000, "manualDiscountReason": "Repeat customer",
+  "leadName": "Anita Rawat", "leadEmail": "anita@example.com", "leadPhone": "9876543210",
+  "travellers": [{ "fullName": "Anita Rawat", "age": 41, "gender": "female" },
+                 { "fullName": "Vikram Rawat", "age": 44, "gender": "male" }],
+  "payment": { "method": "cash", "amount": 1000000 }
+}'
+curl -b admin.txt -X POST http://localhost:5000/api/admin/bookings/42/payments -H "Content-Type: application/json" \
+  -d '{ "method": "cash", "collectedInFull": true }'
+```

@@ -17,7 +17,7 @@ import { sendBookingConfirmedEmails } from './emailService.js';
 // recordAdvanceCaptured, which is idempotent: a second delivery changes nothing.
 
 /** Coupon usage is counted only once the advance is paid. */
-async function redeemCoupon(booking, transaction) {
+export async function redeemCoupon(booking, transaction) {
   if (!booking.couponCode) return;
   const coupon = await Coupon.findOne({ where: { code: booking.couponCode }, transaction });
   if (!coupon) return;
