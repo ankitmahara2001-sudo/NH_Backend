@@ -71,7 +71,8 @@ variables as `.env.example`). On the server itself the host's environment variab
   to start in production without Razorpay, Cloudinary and SMTP settings, and with `MAIL_DEV_LOG=true`.
 - `DATABASE_URL` with `?sslmode=require` (Neon, most hosted PostgreSQL) connects over SSL with certificate
   checks (`db/ssl.cjs`).
-- Run `npm run db:prod:migrate` before starting a new version that adds migrations.
+- `npm start` runs pending migrations (`npm run db:deploy:migrate`) before starting the API, so a deploy
+  migrates the database by itself; if a migration fails the API does not start.
 - `CORS_ORIGINS` must list the website and admin panel origins; `COOKIE_DOMAIN` (e.g. `.example.com`) lets
   the website and API share the login cookie.
 - Razorpay webhook: `https://<api-domain>/api/webhooks/razorpay` with `RAZORPAY_WEBHOOK_SECRET`.
