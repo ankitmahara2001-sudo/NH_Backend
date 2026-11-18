@@ -1,5 +1,6 @@
 import { savingPercent } from '../domain/format.js';
 import { addDays } from '../lib/dates.js';
+import { onlineSeatsLeft } from '../domain/seats.js';
 
 // Shapes package data for the public API. Money stays in paise; the website formats it.
 
@@ -124,10 +125,9 @@ export function serializePackageDetail(pkg, { departures, blockedDates, reviews,
   };
 }
 
-/** Public view of a departure, with seats left (null = unlimited). */
+/** Public view of a departure, with the seats left for online booking (null = unlimited). */
 export function serializeDeparture(departure, durationNights) {
-  const seatsLeft =
-    departure.totalSeats == null ? null : Math.max(0, departure.totalSeats - departure.bookedSeats);
+  const seatsLeft = onlineSeatsLeft(departure);
   return {
     id: departure.id,
     startDate: departure.startDate,

@@ -81,7 +81,7 @@ export async function buildQuote(
   const dates = await resolveTravelDate(
     pkg,
     { ...input, seats: quantities.seats },
-    { transaction, lock: Boolean(transaction), ignoreLeadTime: admin },
+    { transaction, lock: Boolean(transaction), admin },
   );
 
   const unitPrice = sellingPrice(price);

@@ -114,6 +114,8 @@ const departureSchema = z.object({
   id: z.int().positive().optional(),
   startDate: isoDateSchema,
   totalSeats: z.int().min(1).nullish(),
+  // Optional "seats left online": the website shows and sells at most this many. Empty = real count.
+  onlineSeatsLeft: z.int().min(0).nullish(),
   isActive: z.boolean().default(true),
 });
 export const departuresSchema = z

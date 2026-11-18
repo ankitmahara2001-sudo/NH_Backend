@@ -2,6 +2,7 @@ import { Op } from 'sequelize';
 import { AppError } from '../lib/AppError.js';
 import { addDays, todayIst } from '../lib/dates.js';
 import { PackageBlockedDate, PackageDeparture } from '../models/index.js';
+import { onlineSeatsLeft, realSeatsLeft } from '../domain/seats.js';
 
 // Which dates a package can be booked on (CLAUDE.md section 2, "Availability type").
 
@@ -12,13 +13,14 @@ const fieldError = (field, message) => AppError.badRequest(message, { [field]: m
  * all_season: travelDate ≥ today + minDaysBeforeBooking and outside blocked ranges.
  * fixed_date: an active, future departure of this package with enough seats left.
  * Pass `lock` (with a transaction) when reserving seats, so concurrent bookings queue up.
- * `ignoreLeadTime` (admin-panel bookings) allows any all_season date from today, skipping
- * minDaysBeforeBooking; blocked dates still apply.
+ * `admin` (admin-panel bookings) allows any all_season date from today, skipping
+ * minDaysBeforeBooking (blocked dates still apply), and sells the real seats left of a departure
+ * instead of the website's (possibly capped) seats.
  */
 export async function resolveTravelDate(
   pkg,
   { travelDate, departureId, seats },
-  { transaction, lock = false, ignoreLeadTime = false } = {},
+  { transaction, lock = false, admin = false } = {},
 ) {
   const today = todayIst();
 
@@ -32,8 +34,8 @@ export async function resolveTravelDate(
     if (!departure || !departure.isActive || departure.startDate < today) {
       throw fieldError('departureId', 'This departure is no longer available. Please choose another date.');
     }
-    if (departure.totalSeats != null) {
-      const seatsLeft = departure.totalSeats - departure.bookedSeats;
+    const seatsLeft = admin ? realSeatsLeft(departure) : onlineSeatsLeft(departure);
+    if (seatsLeft != null) {
       if (seatsLeft <= 0)
         throw fieldError('departureId', 'This departure is sold out. Please choose another date.');
       if (seats > seatsLeft) {
@@ -52,7 +54,7 @@ export async function resolveTravelDate(
 
   if (!travelDate) throw fieldError('travelDate', 'Choose a travel date.');
   const earliest = addDays(today, pkg.minDaysBeforeBooking);
-  if (ignoreLeadTime) {
+  if (admin) {
     if (travelDate < today) throw fieldError('travelDate', 'Choose today or a later date.');
   } else if (travelDate < earliest) {
     throw fieldError(

@@ -252,3 +252,42 @@ describe('POST /api/admin/bookings/:id/cancel', () => {
     expect(res.body.data.every((b) => b.source === 'admin')).toBe(true);
   });
 });
+
+describe('manual "seats left online"', () => {
+  it('limits website bookings to the manual figure but not admin bookings', async () => {
+    await departure.reload();
+    const packageId = departure.packageId;
+    const pkg = (await admin.get(`/api/admin/packages/${packageId}`)).body.data;
+    const departures = pkg.departures.map(({ id, startDate, totalSeats, onlineSeatsLeft, isActive }) => ({
+      id,
+      startDate,
+      totalSeats,
+      onlineSeatsLeft: id === departure.id ? 1 : onlineSeatsLeft,
+      isActive,
+    }));
+    const saved = await admin.put(`/api/admin/packages/${packageId}/departures`).send({ departures });
+    expect(saved.status).toBe(200);
+    expect(saved.body.data.departures.find((d) => d.id === departure.id)).toMatchObject({
+      onlineSeatsLeft: 1,
+      websiteSeatsLeft: 1,
+    });
+
+    const website = await api().post('/api/pricing/quote').send(tripChoice());
+    expect(website.status).toBe(400);
+    expect(website.body.error.message).toContain('Only 1 seat left');
+
+    const offline = await admin.post('/api/admin/bookings/quote').send(tripChoice());
+    expect(offline.status).toBe(200);
+
+    const tooMany = await admin.put(`/api/admin/packages/${packageId}/departures`).send({
+      departures: departures.map((d) => (d.id === departure.id ? { ...d, onlineSeatsLeft: 100_000 } : d)),
+    });
+    expect(tooMany.status).toBe(400);
+
+    // Clear it again: the real count applies.
+    await admin.put(`/api/admin/packages/${packageId}/departures`).send({
+      departures: departures.map((d) => (d.id === departure.id ? { ...d, onlineSeatsLeft: null } : d)),
+    });
+    expect((await api().post('/api/pricing/quote').send(tripChoice())).status).toBe(200);
+  });
+});

@@ -13,6 +13,8 @@ PackageDeparture.init(
     // NULL = unlimited seats.
     totalSeats: { type: DataTypes.INTEGER, allowNull: true },
     bookedSeats: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    // Website sales stop when bookedSeats reaches this (see src/domain/seats.js). NULL = no cap.
+    onlineSeatCap: { type: DataTypes.INTEGER, allowNull: true },
     isActive: flagColumn(true),
     ...timestampColumns,
   },

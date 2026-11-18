@@ -17,6 +17,7 @@ import {
   PackagePrice,
 } from '../../models/index.js';
 import { pickDisplayPrice } from '../../serializers/packageSerializer.js';
+import { manualSeatsLeft, onlineSeatsLeft as onlineSeatsLeftFor } from '../../domain/seats.js';
 
 // Admin-side package management. Each package-form tab saves through its own function,
 // in one transaction (CLAUDE.md section 6).
@@ -127,7 +128,9 @@ export async function getPackageAdmin(id) {
     ...plain,
     bookingsCount: Number(plain.bookingsCount),
     prices: plain.prices.sort(bySortOrder),
-    departures: plain.departures.sort((a, b) => a.startDate.localeCompare(b.startDate)),
+    departures: plain.departures
+      .sort((a, b) => a.startDate.localeCompare(b.startDate))
+      .map((d) => ({ ...d, onlineSeatsLeft: manualSeatsLeft(d), websiteSeatsLeft: onlineSeatsLeftFor(d) })),
     blockedDates: plain.blockedDates.sort((a, b) => a.startDate.localeCompare(b.startDate)),
     itineraryDays: plain.itineraryDays.sort((a, b) => a.dayNumber - b.dayNumber),
     inclusions: plain.inclusions.sort(bySortOrder),
@@ -357,7 +360,7 @@ export async function replaceDepartures(packageId, { departures }) {
       await departure.destroy({ transaction });
     }
 
-    for (const [index, { id, startDate, totalSeats, isActive }] of departures.entries()) {
+    for (const [index, { id, startDate, totalSeats, onlineSeatsLeft, isActive }] of departures.entries()) {
       const current = id ? byId.get(id) : null;
       if (id && !current) throw AppError.badRequest('A departure does not belong to this package.');
       const booked = current?.bookedSeats ?? 0;
@@ -366,8 +369,17 @@ export async function replaceDepartures(packageId, { departures }) {
           [`departures.${index}.totalSeats`]: `At least ${booked} (already booked).`,
         });
       }
-      if (current) await current.update({ startDate, totalSeats, isActive }, { transaction });
-      else await PackageDeparture.create({ packageId, startDate, totalSeats, isActive }, { transaction });
+      if (onlineSeatsLeft != null && totalSeats != null && onlineSeatsLeft > totalSeats - booked) {
+        const real = totalSeats - booked;
+        throw AppError.badRequest(`Seats left online cannot be more than the ${real} real seats left.`, {
+          [`departures.${index}.onlineSeatsLeft`]: `At most ${real} (the real seats left).`,
+        });
+      }
+      // Stored as a cap on total booked seats, so the manual figure goes down with each booking.
+      const onlineSeatCap = onlineSeatsLeft == null ? null : booked + onlineSeatsLeft;
+      const values = { startDate, totalSeats, onlineSeatCap, isActive };
+      if (current) await current.update(values, { transaction });
+      else await PackageDeparture.create({ packageId, ...values }, { transaction });
     }
   });
   return getPackageAdmin(packageId);
