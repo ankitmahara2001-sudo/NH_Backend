@@ -3,6 +3,8 @@ import {
   adminBookingListQuerySchema,
   adminBookingQuoteSchema,
   adminCreateBookingSchema,
+  adminDashboardQuerySchema,
+  cancelBookingSchema,
   recordBalancePaymentSchema,
 } from '../../domain/schemas/booking.js';
 import { adminChangePasswordSchema, adminLoginSchema } from '../../domain/schemas/auth.js';
@@ -52,7 +54,7 @@ adminRoutes.use(requireAdmin);
 adminRoutes.get('/auth/me', auth.adminMe);
 adminRoutes.patch('/auth/password', validate({ body: adminChangePasswordSchema }), auth.adminChangePassword);
 
-adminRoutes.get('/dashboard', admin.dashboard);
+adminRoutes.get('/dashboard', validate({ query: adminDashboardQuerySchema }), admin.dashboard);
 
 // ---- Packages and uploads ---------------------------------------------------------------------
 adminRoutes.use('/packages', packageRoutes);
@@ -94,6 +96,11 @@ adminRoutes.post(
   '/bookings/:id/payments',
   validate({ ...byId, body: recordBalancePaymentSchema }),
   admin.bookingRecordPayment,
+);
+adminRoutes.post(
+  '/bookings/:id/cancel',
+  validate({ ...byId, body: cancelBookingSchema }),
+  admin.bookingCancel,
 );
 adminRoutes.get('/enquiries', validate({ query: enquiryQuery }), admin.enquiryList);
 adminRoutes.patch('/enquiries/:id', validate({ ...byId, body: enquiryStatusSchema }), admin.enquiryUpdate);

@@ -4,18 +4,31 @@ import { AppError } from '../../lib/AppError.js';
 import { todayIst } from '../../lib/dates.js';
 import { sequelize } from '../../lib/db.js';
 import { paginationMeta, toLimitOffset } from '../../lib/pagination.js';
-import { Booking, BookingTraveller, Customer, Package, Payment } from '../../models/index.js';
+import {
+  Booking,
+  BookingTraveller,
+  CouponRedemption,
+  Customer,
+  Package,
+  PackageDeparture,
+  Payment,
+} from '../../models/index.js';
 import { assertTravellerCount, bookingValues, nextBookingNumber } from '../bookingService.js';
-import { sendBalanceReceivedEmail, sendOfflineBookingReceiptEmail } from '../emailService.js';
+import {
+  sendBalanceReceivedEmail,
+  sendBookingCancelledEmail,
+  sendOfflineBookingReceiptEmail,
+} from '../emailService.js';
 import { redeemCoupon } from '../paymentService.js';
 import { buildQuote, serializeQuote } from '../quoteService.js';
 
 const fieldError = (field, message) => AppError.badRequest(message, { [field]: message });
 
 /** Sequelize `where` for the admin booking filters (also used by the CSV export). */
-function bookingFilters({ status, paymentStatus, packageId, from, to, search }) {
+function bookingFilters({ status, source, paymentStatus, packageId, from, to, search }) {
   const where = {};
   if (status) where.status = status;
+  if (source) where.source = source;
   if (paymentStatus) where.paymentStatus = paymentStatus;
   if (packageId) where.packageId = packageId;
   if (from || to) {
@@ -211,5 +224,45 @@ export async function recordBalancePayment(id, input, { now = new Date() } = {})
   });
 
   const email = input.sendEmail ? await sendBalanceReceivedEmail(booking, payment) : { sent: false };
+  return { booking: await getBookingAdmin(id), emailSent: email.sent };
+}
+
+/**
+ * POST /admin/bookings/:id/cancel — cancels a pending or confirmed booking: seats go back to the
+ * departure, an open online payment is closed and the coupon use is released. Money already paid
+ * stays on the booking (refunds are handled separately). The customer gets a cancellation email
+ * with a PDF cancellation note.
+ * @returns {Promise<{ booking: object, emailSent: boolean }>}
+ */
+export async function cancelBooking(id, { reason, sendEmail }, { now = new Date() } = {}) {
+  const booking = await sequelize.transaction(async (transaction) => {
+    const lock = transaction.LOCK.UPDATE;
+    const booking = await Booking.findByPk(id, { transaction, lock });
+    if (!booking) throw AppError.notFound('Booking not found.');
+    if (booking.status === 'cancelled') throw AppError.badRequest('This booking is already cancelled.');
+    if (booking.status === 'completed') throw AppError.badRequest('Completed bookings cannot be cancelled.');
+
+    if (booking.departureId) {
+      const departure = await PackageDeparture.findByPk(booking.departureId, { transaction, lock });
+      if (departure) {
+        await departure.update(
+          { bookedSeats: Math.max(0, departure.bookedSeats - booking.seats) },
+          { transaction },
+        );
+      }
+    }
+    await booking.update(
+      { status: 'cancelled', cancelledAt: now, cancelReason: reason, expiresAt: null },
+      { transaction },
+    );
+    await Payment.update(
+      { status: 'failed', failureReason: 'Booking cancelled' },
+      { where: { bookingId: booking.id, status: 'created' }, transaction },
+    );
+    await CouponRedemption.destroy({ where: { bookingId: booking.id }, transaction });
+    return booking;
+  });
+
+  const email = sendEmail ? await sendBookingCancelledEmail(booking) : { sent: false };
   return { booking: await getBookingAdmin(id), emailSent: email.sent };
 }

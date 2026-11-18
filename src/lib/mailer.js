@@ -34,7 +34,7 @@ const transport =
 /** Emails "sent" during tests, so tests can read OTP codes and check content. */
 export const testOutbox = [];
 
-async function sendWithBrevo({ to, subject, html, text, fromName }) {
+async function sendWithBrevo({ to, subject, html, text, fromName, attachments }) {
   const response = await fetch(BREVO_SEND_URL, {
     method: 'POST',
     headers: { 'api-key': env.BREVO_API_KEY, 'content-type': 'application/json', accept: 'application/json' },
@@ -44,6 +44,11 @@ async function sendWithBrevo({ to, subject, html, text, fromName }) {
       subject,
       htmlContent: html,
       textContent: text,
+      ...(attachments.length
+        ? {
+            attachment: attachments.map((a) => ({ name: a.filename, content: a.content.toString('base64') })),
+          }
+        : {}),
     }),
     signal: AbortSignal.timeout(SEND_TIMEOUT_MS),
   });
@@ -54,28 +59,44 @@ async function sendWithBrevo({ to, subject, html, text, fromName }) {
 }
 
 /**
- * @param {{ to: string, subject: string, html: string, text: string, fromName?: string }} message
+ * @param {{ to: string, subject: string, html: string, text: string, fromName?: string,
+ *   attachments?: { filename: string, content: Buffer, contentType?: string }[] }} message
  * @returns {Promise<{ sent: boolean }>}
  */
-export async function sendMail({ to, subject, html, text, fromName }) {
+export async function sendMail({ to, subject, html, text, fromName, attachments = [] }) {
   const senderName = fromName ?? env.MAIL_FROM_NAME;
 
   if (isTest) {
-    testOutbox.push({ to, subject, html, text });
+    testOutbox.push({ to, subject, html, text, attachments });
     return { sent: true };
   }
 
   if (!useBrevo && !transport) {
     // Development: show the email in the API console (this is how you read OTP codes locally).
     logger.info(
-      `\n===== EMAIL (not sent: MAIL_DEV_LOG) =====\nTo: ${to}\nSubject: ${subject}\n\n${text}\n==========================================`,
+      `\n===== EMAIL (not sent: MAIL_DEV_LOG) =====\nTo: ${to}\nSubject: ${subject}\n` +
+        (attachments.length ? `Attachments: ${attachments.map((a) => a.filename).join(', ')}\n` : '') +
+        `\n${text}\n==========================================`,
     );
     return { sent: true };
   }
 
   try {
-    if (useBrevo) await sendWithBrevo({ to, subject, html, text, fromName: senderName });
-    else await transport.sendMail({ from: `"${senderName}" <${FROM_ADDRESS}>`, to, subject, html, text });
+    if (useBrevo) await sendWithBrevo({ to, subject, html, text, fromName: senderName, attachments });
+    else {
+      await transport.sendMail({
+        from: `"${senderName}" <${FROM_ADDRESS}>`,
+        to,
+        subject,
+        html,
+        text,
+        attachments: attachments.map((a) => ({
+          filename: a.filename,
+          content: a.content,
+          contentType: a.contentType,
+        })),
+      });
+    }
     return { sent: true };
   } catch (error) {
     logger.error({ err: error, to, subject, via: useBrevo ? 'brevo' : 'smtp' }, 'Email could not be sent');

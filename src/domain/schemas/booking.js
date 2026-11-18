@@ -1,6 +1,12 @@
 import { z } from 'zod';
 import { MAX_TRAVELLER_COUNT } from '../constants.js';
-import { BOOKING_STATUSES, GENDERS, OFFLINE_PAYMENT_METHODS, PAYMENT_STATUSES } from '../enums.js';
+import {
+  BOOKING_SOURCES,
+  BOOKING_STATUSES,
+  GENDERS,
+  OFFLINE_PAYMENT_METHODS,
+  PAYMENT_STATUSES,
+} from '../enums.js';
 import {
   emailSchema,
   isoDateSchema,
@@ -114,7 +120,11 @@ export const recordBalancePaymentSchema = offlinePaymentSchema.safeExtend({
   sendEmail: z.boolean().default(true),
 });
 
-export const cancelBookingSchema = z.object({ reason: requiredText(1000) });
+/** POST /admin/bookings/:id/cancel — the reason is shown to the customer in the email and PDF. */
+export const cancelBookingSchema = z.object({
+  reason: requiredText(1000),
+  sendEmail: z.boolean().default(true),
+});
 
 export const recordRefundSchema = z.object({
   amount: positivePaiseSchema,
@@ -127,6 +137,7 @@ export const bookingStatusUpdateSchema = z.object({ status: z.literal('completed
 
 export const adminBookingListQuerySchema = z.object({
   status: z.enum(BOOKING_STATUSES).optional(),
+  source: z.enum(BOOKING_SOURCES).optional(),
   paymentStatus: z.enum(PAYMENT_STATUSES).optional(),
   packageId: z.coerce.number().int().positive().optional(),
   from: isoDateSchema.optional(),
@@ -135,3 +146,19 @@ export const adminBookingListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
 });
+
+/**
+ * GET /admin/dashboard — period (IST calendar dates, both inclusive; default: this month so far)
+ * and optional package / source filters.
+ */
+export const adminDashboardQuerySchema = z
+  .object({
+    from: isoDateSchema.optional(),
+    to: isoDateSchema.optional(),
+    packageId: z.coerce.number().int().positive().optional(),
+    source: z.enum(BOOKING_SOURCES).optional(),
+  })
+  .refine((q) => !q.from || !q.to || q.from <= q.to, {
+    message: 'The start date must be before the end date.',
+    path: ['from'],
+  });

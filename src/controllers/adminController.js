@@ -1,6 +1,7 @@
 import { createUploadSignature, destroyImage, isOwnPublicId } from '../lib/cloudinary.js';
 import { AppError } from '../lib/AppError.js';
 import {
+  cancelBooking,
   createAdminBooking,
   getBookingAdmin,
   listBookings,
@@ -16,7 +17,7 @@ import { getSettings, updateSetting } from '../services/settingsService.js';
 
 const ok = (res, data) => res.json({ data });
 
-export const dashboard = async (_req, res) => ok(res, await getDashboard());
+export const dashboard = async (req, res) => ok(res, await getDashboard(req.validated.query));
 
 // ---- Uploads ------------------------------------------------------------------------------
 
@@ -59,6 +60,10 @@ export const bookingQuote = async (req, res) => ok(res, await quoteAdminBooking(
 export const bookingCreate = async (req, res) => {
   const { booking, emailSent } = await createAdminBooking(req.validated.body);
   res.status(201).json({ data: booking, meta: { emailSent } });
+};
+export const bookingCancel = async (req, res) => {
+  const { booking, emailSent } = await cancelBooking(req.validated.params.id, req.validated.body);
+  res.json({ data: booking, meta: { emailSent } });
 };
 export const bookingRecordPayment = async (req, res) => {
   const { booking, emailSent } = await recordBalancePayment(req.validated.params.id, req.validated.body);

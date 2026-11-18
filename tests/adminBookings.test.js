@@ -128,8 +128,11 @@ describe('POST /api/admin/bookings', () => {
     expect(res.body.data).toMatchObject({ paymentStatus: 'fully_paid', balanceDue: 0 });
     expect(res.body.data.amountPaid).toBe(res.body.data.totalAmount);
     const [receipt] = receiptsTo(`cash-${runId}@example.com`);
-    expect(receipt.subject).toContain('Receipt');
+    expect(receipt.subject).toContain('Booking confirmed');
     expect(receipt.text).toContain('Reference: UPI-123');
+    expect(receipt.attachments).toHaveLength(1);
+    expect(receipt.attachments[0].filename).toMatch(/^Receipt-NH-\d{4}-\d{5}-\d+\.pdf$/);
+    expect(receipt.attachments[0].content.subarray(0, 5).toString()).toBe('%PDF-');
   });
 
   it('refuses more than the total and saves nothing', async () => {
@@ -196,5 +199,56 @@ describe('POST /api/admin/bookings/:id/payments', () => {
       .send({ method: 'cash', amount: created.balanceDue + 100 });
     expect(res.status).toBe(400);
     expect(res.body.error.fields).toHaveProperty('amount');
+  });
+});
+
+describe('POST /api/admin/bookings/:id/cancel', () => {
+  it('cancels with a reason, frees the seats and mails a cancellation note', async () => {
+    const created = (await admin.post('/api/admin/bookings').send(bookingBody())).body.data;
+    const seatsBefore = (await departure.reload()).bookedSeats;
+    clearOutbox();
+
+    const res = await admin
+      .post(`/api/admin/bookings/${created.id}/cancel`)
+      .send({ reason: 'Customer requested cancellation' });
+    expect(res.status).toBe(200);
+    expect(res.body.meta.emailSent).toBe(true);
+    expect(res.body.data).toMatchObject({
+      status: 'cancelled',
+      cancelReason: 'Customer requested cancellation',
+      amountPaid: created.amountPaid,
+    });
+    expect(res.body.data.cancelledAt).toBeTruthy();
+    expect((await departure.reload()).bookedSeats).toBe(seatsBefore - 2);
+
+    const [mail] = receiptsTo(`cash-${runId}@example.com`);
+    expect(mail.subject).toContain(`Booking cancelled – ${created.bookingNumber}`);
+    expect(mail.text).toContain('Reason: Customer requested cancellation');
+    expect(mail.text).toContain('refund');
+    expect(mail.attachments[0].filename).toBe(`Cancellation-${created.bookingNumber}.pdf`);
+    expect(mail.attachments[0].content.subarray(0, 5).toString()).toBe('%PDF-');
+
+    const again = await admin.post(`/api/admin/bookings/${created.id}/cancel`).send({ reason: 'Twice' });
+    expect(again.status).toBe(400);
+  });
+
+  it('needs a reason and can skip the email', async () => {
+    const created = (await admin.post('/api/admin/bookings').send(bookingBody())).body.data;
+    expect((await admin.post(`/api/admin/bookings/${created.id}/cancel`).send({ reason: ' ' })).status).toBe(400);
+
+    clearOutbox();
+    const res = await admin
+      .post(`/api/admin/bookings/${created.id}/cancel`)
+      .send({ reason: 'Duplicate booking', sendEmail: false });
+    expect(res.status).toBe(200);
+    expect(res.body.meta.emailSent).toBe(false);
+    expect(receiptsTo(`cash-${runId}@example.com`)).toHaveLength(0);
+  });
+
+  it('lists bookings by source', async () => {
+    const res = await admin.get('/api/admin/bookings?source=admin');
+    expect(res.status).toBe(200);
+    expect(res.body.data.length).toBeGreaterThan(0);
+    expect(res.body.data.every((b) => b.source === 'admin')).toBe(true);
   });
 });

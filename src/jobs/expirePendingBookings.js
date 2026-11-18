@@ -8,7 +8,8 @@ import { Booking, PackageDeparture, Payment } from '../models/index.js';
 // out are cancelled and their reserved seats go back to the departure.
 
 const EVERY_FIVE_MINUTES = '*/5 * * * *';
-const EXPIRED_REASON = 'Payment not completed in time';
+/** Also used by the dashboard to tell automatic expiries from real cancellations. */
+export const EXPIRED_REASON = 'Payment not completed in time';
 
 /** Cancels one booking if it is still pending; the row lock stops a racing payment capture. */
 async function expireBooking(bookingId, now) {

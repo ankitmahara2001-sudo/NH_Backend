@@ -27,8 +27,27 @@ describe('admin content', () => {
     expect(res.status).toBe(200);
     // Other test files create bookings in the same database, so only the shape is fixed.
     const amount = expect.any(Number);
-    expect(res.body.data).toMatchObject({ bookingsToday: amount, revenueThisMonth: amount, balancePending: amount });
+    expect(res.body.data).toMatchObject({
+      period: { from: expect.any(String), to: expect.any(String) },
+      bookings: amount,
+      bookingsBySource: { website: amount, admin: amount },
+      travellers: amount,
+      bookedValue: amount,
+      collected: { online: amount, offline: amount, refunded: amount, net: amount },
+      cancellations: amount,
+      balancePending: amount,
+    });
     expect(res.body.data.upcomingDepartures.length).toBeGreaterThan(0);
+  });
+
+  it('filters the dashboard by period, package and source', async () => {
+    const res = await admin.get('/api/admin/dashboard?from=2020-01-01&to=2020-01-31&source=admin&packageId=1');
+    expect(res.status).toBe(200);
+    expect(res.body.data).toMatchObject({ period: { from: '2020-01-01', to: '2020-01-31' }, bookings: 0 });
+    expect(res.body.data.upcomingDepartures.every((d) => d.packageId === 1)).toBe(true);
+
+    const backwards = await admin.get('/api/admin/dashboard?from=2020-02-01&to=2020-01-01');
+    expect(backwards.status).toBe(400);
   });
 
   it('saves settings and /settings/public returns them', async () => {

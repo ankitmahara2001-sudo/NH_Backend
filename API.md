@@ -91,13 +91,18 @@ curl -b admin.txt -X POST http://localhost:5000/api/admin/auth/logout
 
 Money is in paise. These bookings skip Razorpay: they are confirmed at once (`source: "admin"`) and the
 customer is mailed a receipt with the full price breakdown (coupon, manual discount, GST, total, amount
-received, balance due). The response's `meta.emailSent` says whether the receipt went out.
+received, balance due) and a PDF receipt attached. Online (Razorpay) confirmations attach the same PDF
+receipt. The response's `meta.emailSent` says whether the email went out. Cancelling keeps the money
+already paid on the booking; refunds are handled separately.
 
 | Method | Path                           | Notes                                                                                   |
 | ------ | ------------------------------ | --------------------------------------------------------------------------------------- |
 | POST   | `/admin/bookings/quote`        | Same body as `/pricing/quote` plus `manualDiscount` (paise, before GST)                  |
 | POST   | `/admin/bookings`              | Trip choice + `manualDiscount?`, `manualDiscountReason?`, lead details, `travellers`, `payment`, `sendEmail?` |
 | POST   | `/admin/bookings/:id/payments` | Balance on a confirmed booking: `{ method, amount \| collectedInFull, reference?, paidAt?, notes?, sendEmail? }` |
+| POST   | `/admin/bookings/:id/cancel`   | Pending or confirmed booking: `{ reason, sendEmail? }` — frees seats and the coupon use; emails a cancellation note (PDF) |
+| GET    | `/admin/dashboard`             | `?from=YYYY-MM-DD&to=YYYY-MM-DD&packageId=&source=website\|admin` (default: this month so far) |
+| GET    | `/admin/bookings`              | Also filters by `source=website\|admin`                                                    |
 
 `payment` is `{ method: cash|upi|bank_transfer|other, amount?, collectedInFull?, reference?, paidAt?, notes? }`.
 `collectedInFull: true` takes the whole total (or balance) so no amount is needed. `paidAt` (YYYY-MM-DD,
